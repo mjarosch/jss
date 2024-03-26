@@ -1,9 +1,15 @@
-export { constants, ClientError } from '@sitecore-jss/sitecore-jss';
+export { constants, enableDebug, ClientError } from '@sitecore-jss/sitecore-jss';
 export {
   isExperienceEditorActive,
   resetExperienceEditorChromes,
   isEditorActive,
   resetEditorChromes,
+  DefaultEditFrameButton,
+  DefaultEditFrameButtons,
+  EditFrameDataSource,
+  FieldEditButton,
+  WebEditButton,
+  EditButtonTypes,
 } from '@sitecore-jss/sitecore-jss/utils';
 export {
   LayoutService,
@@ -38,14 +44,25 @@ export {
   GraphQLDictionaryService,
   RestDictionaryService,
 } from '@sitecore-jss/sitecore-jss/i18n';
-export { RetryStrategy, DefaultRetryStrategy } from '@sitecore-jss/sitecore-jss/graphql';
+export {
+  GraphQLClientError,
+  RetryStrategy,
+  DefaultRetryStrategy,
+} from '@sitecore-jss/sitecore-jss/graphql';
 export { mediaApi } from '@sitecore-jss/sitecore-jss/media';
 export { ComponentFactory } from './components/sharedTypes';
 export { Placeholder, PlaceholderComponentProps } from './components/Placeholder';
-export { Image, ImageProps, ImageField, getEEMarkup, ImageFieldValue } from './components/Image';
+export {
+  Image,
+  ImageProps,
+  ImageField,
+  getEEMarkup,
+  ImageFieldValue,
+  ImageSizeParameters,
+} from './components/Image';
 export { RichText, RichTextProps, RichTextPropTypes, RichTextField } from './components/RichText';
 export { Text, TextField } from './components/Text';
-export { DateField } from './components/Date';
+export { DateField, DateFieldProps } from './components/Date';
 export { Link, LinkField, LinkFieldValue, LinkProps, LinkPropTypes } from './components/Link';
 export { File, FileField } from './components/File';
 export { VisitorIdentification } from './components/VisitorIdentification';
@@ -55,7 +72,15 @@ export {
   SitecoreContextValue,
   SitecoreContextReactContext,
 } from './components/SitecoreContext';
-export { withSitecoreContext, useSitecoreContext } from './enhancers/withSitecoreContext';
-export { withEditorChromes, withExperienceEditorChromes } from './enhancers/withEditorChromes';
+export {
+  withSitecoreContext,
+  useSitecoreContext,
+  ComponentConsumerProps,
+  WithSitecoreContextOptions,
+  WithSitecoreContextProps,
+  WithSitecoreContextHocProps,
+} from './enhancers/withSitecoreContext';
+export { withEditorChromes } from './enhancers/withEditorChromes';
 export { withPlaceholder } from './enhancers/withPlaceholder';
 export { withDatasourceCheck } from './enhancers/withDatasourceCheck';
+export { EditFrameProps, EditFrame } from './components/EditFrame';

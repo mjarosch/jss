@@ -1,8 +1,8 @@
 import { mediaApi } from '@sitecore-jss/sitecore-jss/media';
 import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOMServer from 'react-dom/server';
 import { addClassName, convertAttributesToReactProps } from '../utils';
+import { getAttributesString } from '../utils';
 
 export interface ImageFieldValue {
   [attributeName: string]: unknown;
@@ -116,10 +116,10 @@ const getImageAttrs = (
 };
 
 /**
- * @param imageField {ImageField} provides the dynamicMedia which is used to render the image
- * @param imageParams {ImageProp['imageParams']}} provides the image parameters that will be attached to the image URL
- * @param mediaUrlPrefix {RegExp} the url prefix regex used in the mediaApi
- * @param otherProps {ImageProps} all other props included on the image component
+ * @param {ImageField} imageField {ImageField} provides the dynamicMedia which is used to render the image
+ * @param {ImageProps.imageParams} imageParams {ImageProp['imageParams']}} provides the image parameters that will be attached to the image URL
+ * @param {RegExp} mediaUrlPrefix {RegExp} the url prefix regex used in the mediaApi
+ * @param {ImageProps} otherProps {ImageProps} all other props included on the image component
  * @returns Experience Editor Markup
  */
 export const getEEMarkup = (
@@ -143,12 +143,12 @@ export const getEEMarkup = (
     return getEditableWrapper(imageField.editable);
   }
 
-  const imgHtml = ReactDOMServer.renderToStaticMarkup(<img {...imgAttrs} />);
+  const imgHtml = `<img ${getAttributesString(imgAttrs as { [key: string]: unknown })} />`;
   const editableMarkup = imageField.editable.replace(foundImg.imgTag, imgHtml);
   return getEditableWrapper(editableMarkup);
 };
 
-export const Image: React.SFC<ImageProps> = ({
+export const Image: React.FC<ImageProps> = ({
   media,
   editable,
   imageParams,

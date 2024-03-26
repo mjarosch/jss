@@ -1,3 +1,4 @@
 {
     "editor.fontSize": 13,
+    "l13Diff.exclude": ["**/node_modules",".yarn", ".git", ".vscode", ".github", "**/dist", "**/types", "**/create-sitecore-jss", "**/ref-docs"]
 }

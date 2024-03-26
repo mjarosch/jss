@@ -1,4 +1,4 @@
-import React, { ReactNode, useContext } from 'react';
+import React, { ReactNode } from 'react';
 import { SitecoreContextReactContext, SitecoreContextValue } from '../components/SitecoreContext';
 
 export interface WithSitecoreContextOptions {
@@ -27,20 +27,23 @@ export function withSitecoreContext(options?: WithSitecoreContextOptions) {
     Component: React.ComponentType<ComponentProps>
   ) {
     return function WithSitecoreContext(props: WithSitecoreContextHocProps<ComponentProps>) {
-      const context = useContext(SitecoreContextReactContext);
       return (
-        <Component
-          {...(props as ComponentProps)}
-          sitecoreContext={context.context}
-          updateSitecoreContext={options && options.updatable && context.setContext}
-        />
+        <SitecoreContextReactContext.Consumer>
+          {(context) => (
+            <Component
+              {...(props as ComponentProps)}
+              sitecoreContext={context.context}
+              updateSitecoreContext={options && options.updatable && context.setContext}
+            />
+          )}
+        </SitecoreContextReactContext.Consumer>
       );
     };
   };
 }
 
 /**
- * This hook grants acсess to the current SiteCore page context
+ * This hook grants acсess to the current Sitecore page context
  * by default JSS includes the following properties in this context:
  * - pageEditing - Provided by Layout Service, a boolean indicating whether the route is being accessed via the Experience Editor.
  * - pageState - Like pageEditing, but a string: normal, preview or edit.

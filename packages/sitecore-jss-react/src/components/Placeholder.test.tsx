@@ -2,26 +2,31 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable react/prop-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react';
-import PropTypes from 'prop-types';
-import { expect } from 'chai';
-import { shallow, mount } from 'enzyme';
 import { ComponentRendering, RouteData } from '@sitecore-jss/sitecore-jss/layout';
-import { ComponentFactory } from './sharedTypes';
-import { Placeholder } from './Placeholder';
-import { SitecoreContext } from './SitecoreContext';
-import { ComponentProps } from './PlaceholderCommon';
+import { expect } from 'chai';
+import { mount, shallow } from 'enzyme';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { stub } from 'sinon';
+import { convertedData as eeData, emptyPlaceholderData } from '../test-data/ee-data';
 import {
+  byocWrapperData,
+  feaasWrapperData,
   convertedDevData as nonEeDevData,
   convertedLayoutServiceData as nonEeLsData,
-  sxaRenderingVariantData,
+  sxaRenderingColumnSplitterVariant,
   sxaRenderingVariantDataWithCommonContainerName as sxaRenderingCommonContainerName,
+  sxaRenderingVariantData,
+  sxaRenderingVariantDoubleDigitDynamicPlaceholder as sxaRenderingDoubleDigitContainerName,
   sxaRenderingVariantDataWithoutCommonContainerName as sxaRenderingWithoutContainerName,
-} from '../testData/non-ee-data';
-import { convertedData as eeData, emptyPlaceholderData } from '../testData/ee-data';
-import * as SxaRichText from '../testData/sxa-rich-text';
-import { MissingComponent, MissingComponentProps } from './MissingComponent';
+} from '../test-data/non-ee-data';
+import * as SxaRichText from '../test-data/sxa-rich-text';
 import { HiddenRendering } from './HiddenRendering';
+import { MissingComponent, MissingComponentProps } from './MissingComponent';
+import { Placeholder } from './Placeholder';
+import { ComponentProps } from './PlaceholderCommon';
+import { SitecoreContext } from './SitecoreContext';
+import { ComponentFactory } from './sharedTypes';
 
 const componentFactory: ComponentFactory = (componentName: string) => {
   const components = new Map<string, React.FC>();
@@ -306,7 +311,7 @@ describe('<Placeholder />', () => {
 
     it('should render with container-{*} type dynamic placeholder', () => {
       const component = sxaRenderingCommonContainerName.sitecore.route as RouteData;
-      const phKey = 'richText';
+      const phKey = 'container-1';
 
       const renderedComponent = mount(
         <Placeholder name={phKey} rendering={component} componentFactory={componentFactory} />
@@ -332,9 +337,40 @@ describe('<Placeholder />', () => {
       expect(renderedComponent.find('.title').length).to.equal(0);
     });
 
+    it('should render with dynamic-1-{*} type dynamic placeholder', () => {
+      const component = sxaRenderingDoubleDigitContainerName.sitecore.route as RouteData;
+      const phKey = 'dynamic-1-{*}';
+
+      const renderedComponent = mount(
+        <Placeholder name={phKey} rendering={component} componentFactory={componentFactory} />
+      );
+
+      expect(renderedComponent.find('.rendering-variant').length).to.equal(1);
+      expect(renderedComponent.find('.rendering-variant').prop('className')).to.equal(
+        'rendering-variant col-9|col-sm-10|col-md-12|col-lg-6|col-xl-7|col-xxl-8 test-css-class-x'
+      );
+      expect(renderedComponent.find('.title').length).to.equal(1);
+      expect(renderedComponent.find('.title').text()).to.equal('Rich Text Rendering Variant');
+    });
+
     it('should render another rendering variant', () => {
       const component = sxaRenderingVariantData.sitecore.route as RouteData;
       const phKey = 'main-second';
+
+      const renderedComponent = mount(
+        <Placeholder name={phKey} rendering={component} componentFactory={componentFactory} />
+      );
+
+      expect(renderedComponent.find('.rendering-variant').length).to.equal(1);
+      expect(renderedComponent.find('.rendering-variant').prop('className')).to.equal(
+        'rendering-variant col-9|col-sm-10|col-md-12|col-lg-6|col-xl-7|col-xxl-8 test-css-class-y'
+      );
+      expect(renderedComponent.find('.default').length).to.equal(1);
+    });
+
+    it('should render column splitter rendering variant', () => {
+      const component = sxaRenderingColumnSplitterVariant.sitecore.route as RouteData;
+      const phKey = 'column-1-{*}';
 
       const renderedComponent = mount(
         <Placeholder name={phKey} rendering={component} componentFactory={componentFactory} />
@@ -497,6 +533,40 @@ it('should render MissingComponent for unknown rendering', () => {
     />
   );
   expect(renderedComponent.find('.missing-component').length).to.equal(1);
+});
+
+it('should render nothing for rendering without a name', () => {
+  const componentFactory: ComponentFactory = (componentName: string) => {
+    const components = new Map<string, React.FC<{ [key: string]: unknown }>>();
+
+    const Home: React.FC<{ rendering?: RouteData }> = ({ rendering }) => (
+      <div className="home-mock"></div>
+    );
+
+    components.set('Home', Home);
+    return components.get(componentName) || null;
+  };
+
+  const route: any = {
+    placeholders: {
+      main: [
+        {
+          componentName: 'Home',
+        },
+        {
+          componentName: null,
+        },
+      ],
+    },
+  };
+  const phKey = 'main';
+
+  const renderedComponent = mount(
+    <div className="empty-test">
+      <Placeholder name={phKey} rendering={route} componentFactory={componentFactory} />
+    </div>
+  );
+  expect(renderedComponent.children().length).to.equal(1);
 });
 
 it('should render HiddenRendering when rendering is hidden', () => {

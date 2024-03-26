@@ -4,14 +4,14 @@ import { use, expect } from 'chai';
 import { RichText as ReactRichText } from '@sitecore-jss/sitecore-jss-react';
 import { NextRouter } from 'next/router';
 import { mount } from 'enzyme';
-import { RouterContext } from 'next/dist/shared/lib/router-context';
+import { RouterContext } from 'next/dist/shared/lib/router-context.shared-runtime';
 import { RichText } from './RichText';
-import { spy } from 'sinon';
+import { SinonSpy, spy } from 'sinon';
 import sinonChai from 'sinon-chai';
 
 use(sinonChai);
 
-const Router = (): NextRouter => ({
+const Router = (): { push: SinonSpy } & Omit<NextRouter, 'push'> => ({
   pathname: '/',
   route: '/',
   query: {},
@@ -19,6 +19,7 @@ const Router = (): NextRouter => ({
   basePath: '',
   isLocaleDomain: false,
   isFallback: false,
+  forward: spy(),
   isPreview: false,
   isReady: false,
   events: { emit: spy(), off: spy(), on: spy() },
@@ -46,7 +47,13 @@ describe('RichText', () => {
 
     const props = {
       field: {
-        value: '<div id="test"><h1>Hello!</h1><a href="/t10">1</a><a href="/t10">2</a></div>',
+        value: `
+        <div id="test">
+          <h1>Hello!</h1>
+          <a href="/t10">1</a>
+          <a href="/t10">2</a>
+          <a href="/contains-children"><span id="child">Title</span></a>
+        </div>`,
       },
     };
 
@@ -61,6 +68,77 @@ describe('RichText', () => {
     expect(c.html()).contains('<h1>Hello!</h1>');
     expect(c.html()).contains('<a href="/t10">1</a>');
     expect(c.html()).contains('<a href="/t10">2</a>');
+    expect(c.html()).contains('<a href="/contains-children"><span id="child">Title</span></a>');
+
+    expect(router.prefetch).callCount(2);
+
+    const main = document.querySelector('main');
+
+    const links = main && main.querySelectorAll('a');
+
+    const link1 = links && links[0];
+    const link2 = links && links[1];
+    const link3 = links && links[2];
+    const innerMarkup = document.querySelector('#child') as HTMLSpanElement;
+
+    expect(link1!.pathname).to.equal('/t10');
+    expect(link2!.pathname).to.equal('/t10');
+
+    link1?.click();
+
+    expect(router.push).callCount(1);
+
+    link2?.click();
+
+    expect(router.push).callCount(2);
+
+    link3?.click();
+
+    expect(router.push).callCount(3);
+
+    // Check that when we click on link with children "router push" is called with expected pathname
+    innerMarkup?.click();
+
+    expect(router.push).callCount(4);
+    expect(router.push.getCall(3).calledWith('https://example.com/contains-children')).to.equal(
+      true
+    );
+
+    expect(c.find(ReactRichText).length).to.equal(1);
+
+    document.body.removeChild(app);
+  });
+
+  it('should re-initialize links when the re-mounting with different content', () => {
+    const app = document.createElement('main');
+
+    document.body.appendChild(app);
+
+    const router = Router();
+
+    const props = {
+      field: {
+        value: '<div id="test"><h1>Hello!</h1><a href="/t100">1</a><a href="/t100">2</a></div>',
+      },
+    };
+
+    const props2 = {
+      field: {
+        value: '<div id="test"><h1>Hello!</h1><a href="/t20">1</a><a href="/t20">2</a></div>',
+      },
+    };
+
+    const initialMountedComponent = mount(
+      <Page value={router}>
+        <RichText {...props} />
+      </Page>,
+      { attachTo: app }
+    );
+
+    expect(initialMountedComponent.html()).contains('<div id="test">');
+    expect(initialMountedComponent.html()).contains('<h1>Hello!</h1>');
+    expect(initialMountedComponent.html()).contains('<a href="/t100">1</a>');
+    expect(initialMountedComponent.html()).contains('<a href="/t100">2</a>');
 
     expect(router.prefetch).callCount(1);
 
@@ -71,8 +149,8 @@ describe('RichText', () => {
     const link1 = links && links[0];
     const link2 = links && links[1];
 
-    expect(link1!.href).to.equal('/t10');
-    expect(link2!.href).to.equal('/t10');
+    expect(link1!.pathname).to.equal('/t100');
+    expect(link2!.pathname).to.equal('/t100');
 
     link1 && link1.click();
 
@@ -82,7 +160,41 @@ describe('RichText', () => {
 
     expect(router.push).callCount(2);
 
-    expect(c.find(ReactRichText).length).to.equal(1);
+    expect(initialMountedComponent.find(ReactRichText).length).to.equal(1);
+
+    initialMountedComponent.unmount();
+
+    const remountedComponent = mount(
+      <Page value={router}>
+        <RichText {...props2} />
+      </Page>,
+      { attachTo: app }
+    );
+
+    expect(remountedComponent.html()).contains('<div id="test">');
+    expect(remountedComponent.html()).contains('<h1>Hello!</h1>');
+    expect(remountedComponent.html()).contains('<a href="/t20">1</a>');
+    expect(remountedComponent.html()).contains('<a href="/t20">2</a>');
+
+    expect(router.prefetch).callCount(2);
+
+    const links2 = main && main.querySelectorAll('a');
+
+    const link3 = links2 && links2[0];
+    const link4 = links2 && links2[1];
+
+    expect(link3!.pathname).to.equal('/t20');
+    expect(link4!.pathname).to.equal('/t20');
+
+    link3 && link3.click();
+
+    expect(router.push).callCount(3);
+
+    link4 && link4.click();
+
+    expect(router.push).callCount(4);
+
+    expect(remountedComponent.find(ReactRichText).length).to.equal(1);
 
     document.body.removeChild(app);
   });
@@ -112,15 +224,15 @@ describe('RichText', () => {
     expect(c.html()).contains('<div id="test">');
     expect(c.html()).contains('<h1>Hello!</h1>');
 
+    expect(router.prefetch).callCount(1);
+
     const main = document.querySelector('main');
-
     const links = main && main.querySelectorAll('a');
-
     const link1 = links && links[0];
     const link2 = links && links[1];
 
-    expect(link1!.href).to.equal('/testpath/t1?test=sample1');
-    expect(link2!.href).to.equal('/t2');
+    expect(link1!.href).to.endWith('/testpath/t1?test=sample1');
+    expect(link2!.pathname).to.equal('/t2');
 
     link1 && link1.click();
 
@@ -200,5 +312,71 @@ describe('RichText', () => {
     expect(router.prefetch).callCount(0);
 
     expect(c.find(ReactRichText).length).to.equal(1);
+  });
+
+  it('should not initialize links when target set to "_blank"', () => {
+    const app = document.createElement('main');
+
+    document.body.appendChild(app);
+
+    const router = Router();
+
+    const props = {
+      field: {
+        value: '<div id="test"><h1>Hello!</h1><a href="/t1" target="_blank">t1</a></div>',
+      },
+    };
+
+    const c = mount(
+      <Page value={router}>
+        <RichText {...props} />
+      </Page>,
+      { attachTo: app }
+    );
+
+    expect(c.html()).contains('<div id="test">');
+    expect(c.html()).contains('<h1>Hello!</h1>');
+    expect(c.html()).contains('<a href="/t1" target="_blank">t1</a>');
+
+    const main = document.querySelector('main');
+    const links = main && main.querySelectorAll('a');
+    const link = links && links[0];
+
+    expect(router.prefetch).callCount(0);
+
+    link && link.click();
+
+    expect(router.push).callCount(0);
+
+    expect(c.find(ReactRichText).length).to.equal(1);
+  });
+
+  it('Should not call prefetch when prefetchLinks is set to false', () => {
+    const app = document.createElement('main');
+
+    document.body.appendChild(app);
+
+    const router = Router();
+
+    const props = {
+      field: {
+        value:
+          '<div id="test"><h1>Prefetch test!</h1><a href="/notprefetched1">1</a><a href="/notprefetched2">2</a></div>',
+      },
+    };
+
+    const c = mount(
+      <Page value={router}>
+        <RichText {...props} prefetchLinks={false} />
+      </Page>,
+      { attachTo: app }
+    );
+
+    expect(c.html()).contains('<div id="test">');
+    expect(c.html()).contains('<h1>Prefetch test!</h1>');
+    expect(c.html()).contains('<a href="/notprefetched1">1</a>');
+    expect(c.html()).contains('<a href="/notprefetched2">2</a>');
+
+    expect(router.prefetch).callCount(0);
   });
 });

@@ -5,4 +5,4 @@ This module is provided as a part of Sitecore JavaScript Rendering SDK (JSS). It
 
 [Documentation](https://doc.sitecore.com/xp/en/developers/hd/201/sitecore-headless-development/sitecore-javascript-rendering-sdk--jss--for-react.html)
 
-[API reference documentation](/ref-docs/sitecore-jss-react/).
+[API reference documentation](/ref-docs/sitecore-jss-react/)

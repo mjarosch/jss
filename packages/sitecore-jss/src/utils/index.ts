@@ -1,11 +1,24 @@
 export { default as isServer } from './is-server';
-export { default as resolveUrl } from './resolve-url';
+export { resolveUrl, isAbsoluteUrl, isTimeoutError } from './utils';
+export { tryParseEnvValue } from './env';
 export {
   ExperienceEditor,
   HorizonEditor,
   isEditorActive,
-  resetEditorChromes,
   isExperienceEditorActive,
+  resetEditorChromes,
   resetExperienceEditorChromes,
   handleEditorAnchors,
+  Metadata,
 } from './editing';
+export {
+  DefaultEditFrameButton,
+  DefaultEditFrameButtons,
+  DefaultEditFrameButtonIds,
+  EditFrameDataSource,
+  ChromeCommand,
+  FieldEditButton,
+  WebEditButton,
+  EditButtonTypes,
+  mapButtonToCommand,
+} from './edit-frame';

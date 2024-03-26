@@ -12,9 +12,6 @@ import {
 import { convertAttributesToReactProps } from '../utils';
 import { HiddenRendering, HIDDEN_RENDERING_NAME } from './HiddenRendering';
 
-/** [SXA] common marker by which we find container fo replacing **/
-const PREFIX_PLACEHOLDER = 'container-{*}';
-
 type ErrorComponentProps = {
   [prop: string]: unknown;
 };
@@ -121,10 +118,19 @@ export class PlaceholderCommon<T extends PlaceholderProps> extends React.Compone
   ) {
     let result;
     /** [SXA] it needs for deleting dynamics placeholder when we set him number(props.name) of container.
-    from backend side we get common name of placeholder is called 'container-{*}' where '{*}' marker for replacing **/
-    if (rendering && rendering.placeholders && rendering.placeholders[PREFIX_PLACEHOLDER]) {
-      rendering.placeholders[name] = rendering.placeholders[PREFIX_PLACEHOLDER];
-      delete rendering.placeholders[PREFIX_PLACEHOLDER];
+    from backend side we get common name of placeholder is called 'nameOfContainer-{*}' where '{*}' marker for replacing **/
+    if (rendering?.placeholders) {
+      Object.keys(rendering.placeholders).forEach((placeholder) => {
+        const patternPlaceholder =
+          placeholder.indexOf('{*}') !== -1
+            ? new RegExp(`^${placeholder.replace(/\{\*\}+/i, '\\d+')}$`)
+            : null;
+
+        if (patternPlaceholder && patternPlaceholder.test(name)) {
+          rendering.placeholders[name] = rendering.placeholders[placeholder];
+          delete rendering.placeholders[placeholder];
+        }
+      });
     }
 
     if (rendering && rendering.placeholders && Object.keys(rendering.placeholders).length > 0) {
@@ -158,6 +164,7 @@ export class PlaceholderCommon<T extends PlaceholderProps> extends React.Compone
   }
 
   getSXAParams(rendering: ComponentRendering) {
+    if (!rendering.params) return {};
     return (
       rendering.params.FieldNames && {
         styles: `${rendering.params.GridParameters || ''} ${rendering.params.Styles || ''}`,
@@ -196,6 +203,8 @@ export class PlaceholderCommon<T extends PlaceholderProps> extends React.Compone
 
         if (componentRendering.componentName === HIDDEN_RENDERING_NAME) {
           component = hiddenRenderingComponent ?? HiddenRendering;
+        } else if (!componentRendering.componentName) {
+          component = () => <></>;
         } else {
           component = this.getComponentForRendering(componentRendering);
         }

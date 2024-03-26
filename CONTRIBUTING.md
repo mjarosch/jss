@@ -4,8 +4,8 @@ Want to contribute to Sitecore JavaScript Services? There are a few things you n
 
 ## Pre-requisites:
 
-- `node.js` (Use version `>= 12` or [Active LTS](https://nodejs.org/en/about/releases/)) installed (cmd `node -v` to test).
-- `npm` (`>= 6`) installed (cmd `npm -v` to test).
+- `node.js` (Use version `>= 18` or [Active LTS](https://nodejs.org/en/about/releases/)) installed (cmd `node -v` to test).
+- `npm` (`>= 9`) installed (cmd `npm -v` to test).
 
 Install yarn globally:
 
@@ -68,8 +68,8 @@ npm i -g
 ```
 
 To start developing the sample you have to do next:
-* copy [watch.json.example](https://github.com/Sitecore/jss/blob/dev/packages/create-sitecore-jss/watch.json.example) file and name it **watch.json**. You have to set up appropriate arguments for the sample which you want to start to develop
-* run `yarn watch`. A new sample will be created in the specified `destination` path. Monorepo symlinking will work if you create the sample within the repository source root. You can modify any file related to your sample under `src/templates` folder, and changed files will be automatically copied into your sample.
+* Copy [watch.json.example](https://github.com/Sitecore/jss/blob/dev/packages/create-sitecore-jss/watch.json.example) file and name it **watch.json**. You have to set up appropriate arguments for the sample which you want to start to develop. Monorepo symlinking will work if you specify a `destination` under the source root `samples`  directory (i.e. `<root>\samples\<my-app>`).
+* Run `yarn watch`. A new sample will be created in the specified `destination` path. You can modify any file related to your sample under `src/templates` folder, and changed files will be automatically copied into your sample.
 
 ## Linting and Code Style guidelines
 

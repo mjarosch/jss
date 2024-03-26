@@ -40,12 +40,10 @@ export interface LayoutServiceContextData {
 /**
  * Shape of route data returned from Sitecore Layout Service
  */
-export interface RouteData {
+export interface RouteData<Fields = Record<string, Field | Item | Item[]>> {
   name: string;
   displayName?: string;
-  fields?: {
-    [name: string]: Field;
-  };
+  fields?: Fields;
   databaseName?: string;
   deviceId?: string;
   itemLanguage?: string;
@@ -124,6 +122,8 @@ export interface Field<T = GenericFieldValue> {
 export interface Item {
   name: string;
   displayName?: string;
+  id?: string;
+  url?: string;
   fields: {
     [name: string]: Field | Item | Item[] | undefined;
   };

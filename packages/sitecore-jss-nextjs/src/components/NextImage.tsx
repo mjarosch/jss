@@ -8,26 +8,17 @@ import {
   ImageField,
   ImageFieldValue,
 } from '@sitecore-jss/sitecore-jss-react';
-import Image, {
-  ImageLoader,
-  ImageLoaderProps,
-  ImageProps as NextImageProperties,
-} from 'next/image';
+import Image, { ImageProps as NextImageProperties } from 'next/image';
 
 type NextImageProps = Omit<ImageProps, 'media'> & Partial<NextImageProperties>;
 
-export const sitecoreLoader: ImageLoader = ({ src, width }: ImageLoaderProps): string => {
-  const [root, paramString] = src.split('?');
-  const params = new URLSearchParams(paramString);
-  params.set('mw', width.toString());
-  return `${root}?${params}`;
-};
-
-export const NextImage: React.SFC<NextImageProps> = ({
+export const NextImage: React.FC<NextImageProps> = ({
   editable,
   imageParams,
   field,
   mediaUrlPrefix,
+  fill,
+  priority,
   ...otherProps
 }) => {
   // next handles src and we use a custom loader,
@@ -68,6 +59,8 @@ export const NextImage: React.SFC<NextImageProps> = ({
   const attrs = {
     ...img,
     ...otherProps,
+    fill,
+    priority,
     src: mediaApi.updateImageUrl(
       img.src as string,
       imageParams as { [paramName: string]: string | number },
@@ -82,10 +75,14 @@ export const NextImage: React.SFC<NextImageProps> = ({
     src: mediaApi.replaceMediaUrlPrefix(attrs.src, mediaUrlPrefix as RegExp),
   };
 
-  const loader = (otherProps.loader ? otherProps.loader : sitecoreLoader) as ImageLoader;
+  // Exclude `width`, `height` in case image is responsive, `fill` is used
+  if (imageProps.fill) {
+    delete imageProps.width;
+    delete imageProps.height;
+  }
 
   if (attrs) {
-    return <Image loader={loader} {...imageProps} />;
+    return <Image alt="" {...imageProps} />;
   }
 
   return null; // we can't handle the truth

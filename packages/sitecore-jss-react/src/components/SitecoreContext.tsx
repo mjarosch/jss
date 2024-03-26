@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import PropTypes from 'prop-types';
-import deepEqual from 'deep-equal';
+import fastDeepEqual from 'fast-deep-equal/es6/react';
 import { ComponentFactory } from './sharedTypes';
 import { LayoutServiceContext, LayoutServiceData, RouteData } from '../index';
 
 export interface SitecoreContextProps {
   componentFactory: ComponentFactory;
   layoutData?: LayoutServiceData;
+  children: React.ReactNode;
 }
 
 export interface SitecoreContextState {
@@ -69,7 +70,7 @@ export class SitecoreContext extends React.Component<SitecoreContextProps, Sitec
   componentDidUpdate(prevProps: SitecoreContextProps) {
     // In case if somebody will manage SitecoreContext state by passing fresh `layoutData` prop
     // instead of using `updateSitecoreContext`
-    if (!deepEqual(prevProps.layoutData, this.props.layoutData)) {
+    if (!fastDeepEqual(prevProps.layoutData, this.props.layoutData)) {
       this.setContext(this.props.layoutData);
 
       return;

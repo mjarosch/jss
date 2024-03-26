@@ -2,6 +2,7 @@ import {
   GraphQLClient,
   GraphQLRequestClient,
   GraphQLRequestClientConfig,
+  GraphQLRequestClientFactory,
 } from '../graphql-request-client';
 import { SitecoreTemplateId } from '../constants';
 import { DictionaryPhrases, DictionaryServiceBase } from './dictionary-service';
@@ -58,13 +59,21 @@ export interface GraphQLDictionaryServiceConfig
     Pick<GraphQLRequestClientConfig, 'retries' | 'retryStrategy'> {
   /**
    * The URL of the graphQL endpoint.
+   * @deprecated use @param clientFactory property instead
    */
-  endpoint: string;
+  endpoint?: string;
 
   /**
    * The API key to use for authentication.
+   * @deprecated use @param clientFactory property instead
    */
-  apiKey: string;
+  apiKey?: string;
+
+  /**
+   * A GraphQL Request Client Factory is a function that accepts configuration and returns an instance of a GraphQLRequestClient.
+   * This factory function is used to create and configure GraphQL clients for making GraphQL API requests.
+   */
+  clientFactory?: GraphQLRequestClientFactory;
 
   /**
    * Optional. The template ID to use when searching for dictionary entries.
@@ -110,7 +119,7 @@ export class GraphQLDictionaryService extends DictionaryServiceBase {
    * Fetches dictionary data for internalization.
    * @param {string} language the language to fetch
    * @default query (@see query)
-   * @returns dictionary phrases
+   * @returns {Promise<DictionaryPhrases>} dictionary phrases
    * @throws {Error} if the app root was not found for the specified site and language.
    */
   async fetchDictionaryData(language: string): Promise<DictionaryPhrases> {
@@ -120,6 +129,8 @@ export class GraphQLDictionaryService extends DictionaryServiceBase {
       debug.dictionary('using cached dictionary data for %s %s', language, this.options.siteName);
       return cachedValue;
     }
+
+    debug.dictionary('fetching site root for %s %s', language, this.options.siteName);
 
     // If the caller does not specify a root item ID, then we try to figure it out
     const rootItemId =
@@ -159,6 +170,18 @@ export class GraphQLDictionaryService extends DictionaryServiceBase {
    * @returns {GraphQLClient} implementation
    */
   protected getGraphQLClient(): GraphQLClient {
+    if (!this.options.endpoint) {
+      if (!this.options.clientFactory) {
+        throw new Error('You should provide either an endpoint and apiKey, or a clientFactory.');
+      }
+
+      return this.options.clientFactory({
+        debugger: debug.dictionary,
+        retries: this.options.retries,
+        retryStrategy: this.options.retryStrategy,
+      });
+    }
+
     return new GraphQLRequestClient(this.options.endpoint, {
       apiKey: this.options.apiKey,
       debugger: debug.dictionary,

@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { createRef } from 'react';
 import { expect } from 'chai';
 import { mount } from 'enzyme';
 
 import { Link, LinkField } from './Link';
-import { generalLinkField as eeLinkData } from '../testData/ee-data';
+import { generalLinkField as eeLinkData } from '../test-data/ee-data';
 
 describe('<Link />', () => {
   it('should render nothing with missing field', () => {
-    const field = null as LinkField;
+    const field = (null as unknown) as LinkField;
     const rendered = mount(<Link field={field} />).children();
     expect(rendered).to.have.length(0);
   });
@@ -49,6 +49,18 @@ describe('<Link />', () => {
     const rendered = mount(<Link field={field} />).find('a');
     expect(rendered.html()).to.contain(field.href);
     expect(rendered.html()).to.contain(field.text);
+  });
+
+  it('should not add extra hash when linktype is anchor', () => {
+    const field = {
+      linktype: 'anchor',
+      href: '#anchor',
+      text: 'anchor link',
+      anchor: 'anchor',
+    };
+    const rendered = mount(<Link field={field} />).find('a');
+    expect(rendered.html()).to.contain(`href="${field.href}"`);
+    expect(rendered.text()).to.equal(field.text);
   });
 
   it('should render ee HTML', () => {
@@ -100,5 +112,18 @@ describe('<Link />', () => {
     };
     const rendered = mount(<Link field={field} id="my-link" />);
     expect(rendered.html()).to.contain('id="my-link"');
+  });
+
+  it('should render with a ref to the anchor', () => {
+    const field = {
+      href: '/lorem',
+      text: 'ipsum',
+    };
+    const ref = createRef<HTMLAnchorElement>();
+
+    const c = mount(<Link field={field} ref={ref} id="my-link" />);
+
+    const link = c.find('a');
+    expect(ref.current?.id).to.equal(link.props().id);
   });
 });

@@ -9,12 +9,12 @@ import {
   ComponentPropsCollection,
   ComponentPropsFetchFunction,
 } from '../sharedTypes/component-props';
-import { ComponentModule } from '../sharedTypes/component-module';
+import { ModuleFactory } from '../sharedTypes/module-factory';
 
 export type FetchComponentPropsArguments<NextContext> = {
   layoutData: LayoutServiceData;
   context: NextContext;
-  componentModule: ComponentModule;
+  moduleFactory: ModuleFactory;
 };
 
 export type ComponentPropsRequest<NextContext> = {
@@ -33,15 +33,15 @@ export class ComponentPropsService {
    * SSR mode
    * Fetch component props using getServerSideProps function
    * @param {FetchComponentPropsArguments<GetServerSidePropsContext>} params fetch params
-   * @returns {Promise<ComponentPropsCollection>} component props
+   * @returns {Promise<ComponentPropsCollection>} props
    */
   async fetchServerSideComponentProps(
     params: FetchComponentPropsArguments<GetServerSidePropsContext>
   ): Promise<ComponentPropsCollection> {
-    const { componentModule, layoutData, context } = params;
+    const { moduleFactory, layoutData, context } = params;
 
     const fetchFunctionFactory = async (componentName: string) => {
-      const module = await componentModule(componentName);
+      const module = await moduleFactory(componentName);
 
       return module?.getServerSideProps;
     };
@@ -62,10 +62,10 @@ export class ComponentPropsService {
   async fetchStaticComponentProps(
     params: FetchComponentPropsArguments<GetStaticPropsContext>
   ): Promise<ComponentPropsCollection> {
-    const { componentModule, layoutData, context } = params;
+    const { moduleFactory, layoutData, context } = params;
 
     const fetchFunctionFactory = async (componentName: string) => {
-      const module = await componentModule(componentName);
+      const module = await moduleFactory(componentName);
 
       return module?.getStaticProps;
     };

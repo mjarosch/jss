@@ -1,4 +1,6 @@
+/* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
+import sinon, { SinonSpy } from 'sinon';
 import nock from 'nock';
 import { SitecoreTemplateId } from '../constants';
 import { GraphQLClient, GraphQLRequestClient } from '../graphql-request-client';
@@ -36,6 +38,27 @@ describe('GraphQLDictionaryService', () => {
       siteName,
       rootItemId,
       cacheEnabled: false,
+    });
+    const result = await service.fetchDictionaryData('en');
+    expect(result.foo).to.equal('foo');
+    expect(result.bar).to.equal('bar');
+  });
+
+  it('should fetch dictionary phrases using clientFactory', async () => {
+    nock(endpoint, { reqheaders: { sc_apikey: apiKey } })
+      .post('/', /DictionarySearch/gi)
+      .reply(200, dictionaryQueryResponse);
+
+    const clientFactory = GraphQLRequestClient.createClientFactory({
+      endpoint,
+      apiKey,
+    });
+
+    const service = new GraphQLDictionaryService({
+      siteName,
+      rootItemId,
+      cacheEnabled: false,
+      clientFactory,
     });
     const result = await service.fetchDictionaryData('en');
     expect(result.foo).to.equal('foo');
@@ -252,5 +275,27 @@ describe('GraphQLDictionaryService', () => {
     expect(graphQLClient).to.exist;
     // eslint-disable-next-line no-unused-expressions
     expect(graphQLRequestClient).to.exist;
+  });
+
+  it('should call clientFactory with the correct arguments', () => {
+    const clientFactorySpy: SinonSpy = sinon.spy();
+    const mockServiceConfig = {
+      siteName: 'supersite',
+      clientFactory: clientFactorySpy,
+      retries: 3,
+      retryStrategy: {
+        getDelay: () => 1000,
+        shouldRetry: () => true,
+      },
+    };
+
+    new GraphQLDictionaryService(mockServiceConfig);
+
+    expect(clientFactorySpy.calledOnce).to.be.true;
+
+    const calledWithArgs = clientFactorySpy.firstCall.args[0];
+    expect(calledWithArgs.debugger).to.exist;
+    expect(calledWithArgs.retries).to.equal(mockServiceConfig.retries);
+    expect(calledWithArgs.retryStrategy).to.deep.equal(mockServiceConfig.retryStrategy);
   });
 });
